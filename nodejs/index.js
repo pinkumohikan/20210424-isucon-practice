@@ -480,7 +480,7 @@ pool.query("SELECT * FROM image")
     .then((images) => {
         images.forEach(image => {
             // attributes: id, name, data
-            fs.writeFile(ICONS_FOLDER+image.name, image.data, (err) => console.error("書き込めんかったわ :knife: error="+err));
+            fs.writeFile(ICONS_FOLDER+image.name, image.data, (err) => !!err && console.error("書き込めんかったわ :knife: error="+err));
         });
     });
 
