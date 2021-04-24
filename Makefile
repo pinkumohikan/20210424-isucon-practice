@@ -9,7 +9,6 @@ stop-services:
 
 start-services:
 	sudo systemctl start mysql
-	sudo mysql -u root isubata -e "SET GLOBAL slow_query_log = ON;"
 	sudo systemctl start isubata.nodejs
 	sudo systemctl start nginx
 
@@ -17,7 +16,7 @@ truncate-logs:
 	sudo truncate --size 0 /var/log/nginx/access.log
 	sudo truncate --size 0 /var/log/nginx/error.log
 	sudo truncate --size 0 /var/log/mysql/error.log
-	sudo truncate --size 0 /var/log/slow.log
+	sudo truncate --size 0 /var/lib/mysql/slow-query.log
 
 bench:
 	ssh isucon@18.182.65.45 "make -C ~/isubata/bench bench"
