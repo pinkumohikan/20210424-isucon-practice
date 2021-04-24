@@ -434,6 +434,7 @@ function postProfile(req, res) {
         }
       }
       if (avatarName && avatarData) {
+        fs.writeFile(ICONS_FOLDER+avatarName, avatarData);
         p = p.then(() => pool.query('INSERT INTO image (name, data) VALUES (?, _binary ?)', [avatarName, avatarData]))
         p = p.then(() => pool.query('UPDATE user SET avatar_icon = ? WHERE id = ?', [avatarName, userId]))
       }
@@ -474,6 +475,14 @@ function getIcon(req, res) {
       res.header({ 'Content-Type': mime }).end(row.data)
     })
 }
+
+pool.query("SELECT * FROM image")
+    .then((images) => {
+        images.forEach(image => {
+            // attributes: id, name, data
+            fs.writeFile(ICONS_FOLDER+name, image.data, (err) => console.error("書き込めんかったわ :knife: error="+err));
+        });
+    });
 
 app.listen(PORT, () => {
   console.log('Example app listening on port ' + PORT + '!')
