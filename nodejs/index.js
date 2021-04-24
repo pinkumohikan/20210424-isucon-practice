@@ -281,6 +281,11 @@ function sleep (seconds) {
   })
 }
 
+const { Worker } = require('worker_threads');
+const { parentPort } = require('worker_threads');
+
+
+
 app.get('/fetch', fetchUnread)
 function fetchUnread(req, res) {
   const { userId } = req.session
@@ -289,33 +294,25 @@ function fetchUnread(req, res) {
     return
   }
 
-  return sleep(1.0)
-    .then(() => pool.query('SELECT id FROM channel'))
-    .then(rows => {
-      const channelIds = rows.map(row => row.id)
-      const results = []
-      let p = Promise.resolve()
+  // return sleep(1.0)
 
-      channelIds.forEach(channelId => {
-        p = p.then(() => pool.query('SELECT * FROM haveread WHERE user_id = ? AND channel_id = ?', [userId, channelId]))
-          .then(([row]) => {
-            if (row) {
-              return pool.query('SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id', [channelId, row.message_id])
-            } else {
-              return pool.query('SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?', [channelId])
-            }
-          })
-          .then(([row3]) => {
-            const r = {}
-            r.channel_id = channelId
-            r.unread = row3.cnt
-            results.push(r)
-          })
-      })
+  const results = []
 
-      return p.then(() => results)
-    })
-    .then(results => res.json(results))
+  const messageChannelIds = pool.query('SELECT message_id, channel_id FROM haveread WHERE user_id = ? AND channel_id in (SELECT id FROM channel)', [userId])
+  return messageIds.then(([row]) => {
+    if (row) {
+      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ? AND ? < id', [row.channelId, row.message_id])
+    } else {
+      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ?', [row.channelId])
+    }
+  })
+  .then(([row3]) => {
+    const r = {}
+    r.channel_id = channelId
+    r.unread = row3.cnt
+    results.push(r)
+  })
+  .then(() => res.json(results))
 }
 
 app.get('/history/:channelId', loginRequired, getHistory)
