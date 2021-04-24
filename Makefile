@@ -16,6 +16,7 @@ truncate-logs:
 	sudo truncate --size 0 /var/log/nginx/access.log
 	sudo truncate --size 0 /var/log/nginx/error.log
 	sudo truncate --size 0 /var/log/mysql/error.log
+	sudo truncate --size 0 /var/log/slow.log
 
 bench:
 	ssh isucon@18.182.65.45 "make -C ~/isubata/bench bench"
