@@ -229,22 +229,36 @@ function getMessage(req, res) {
   }
 
   const { channel_id, last_message_id } = req.query
-  return pool.query('SELECT * FROM message WHERE id > ? AND channel_id = ? ORDER BY id DESC LIMIT 100', [last_message_id, channel_id])
+  return pool.query(`
+        SELECT
+            m.id,
+            m.created_at,
+            m.content,
+            u.name as user_name,
+            u.display_name as user_display_name,
+            u.avatar_icon as user_avatar_icon
+        FROM
+            message as m
+            inner join user as u on u.id = m.user_id
+        WHERE
+            m.id > ?
+            AND m.channel_id = ?
+        ORDER BY m.id DESC
+        LIMIT 100`, [last_message_id, channel_id])
     .then(rows => {
       const response = []
       let p = Promise.resolve()
       rows.forEach((row, i) => {
-        const r = {}
-        r.id = row.id
-        p = p.then(() => {
-          return pool.query('SELECT name, display_name, avatar_icon FROM user WHERE id = ?', [row.user_id])
-            .then(([user]) => {
-              r.user = user
-              r.date = formatDate(row.created_at)
-              r.content = row.content
-              response[i] = r
-            })
-        })
+        response[i] = {
+          id: row.id,
+          user: {
+              name: row.user_name,
+              display_name: row.user_display_name,
+              avatar_icon: row.user_avatar_icon,
+          },
+          date: formatDate(row.created_at),
+          content: row.content,
+        };
       })
 
       return p.then(() => {
