@@ -329,57 +329,61 @@ function getHistory(req, res) {
   }
 
   const N = 20
-  return pool.query('SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?', [channelId])
-    .then(([row2]) => {
-      const cnt = row2.cnt
-      const maxPage = Math.max(Math.ceil(cnt / N), 1)
-      if (page > maxPage) {
-        res.status(400).end()
-        return
-      }
 
-      return pool.query(`
-        SELECT
-            m.id,
-            m.created_at,
-            m.content,
-            u.name as user_name,
-            u.display_name as user_display_name,
-            u.avatar_icon as user_avatar_icon
-        FROM
-            message as m
-            inner join user as u on u.id = m.user_id
-        WHERE
-            m.channel_id = ?
-        ORDER BY m.id DESC
-        LIMIT ?
-        OFFSET ?`, [channelId, N, (page - 1) * N])
-        .then(rows => {
-          const messages = []
+  return sleep(1.0)
+      .then(() => {
+      pool.query('SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?', [channelId])
+        .then(([row2]) => {
+          const cnt = row2.cnt
+          const maxPage = Math.max(Math.ceil(cnt / N), 1)
+          if (page > maxPage) {
+            res.status(400).end()
+            return
+          }
 
-          rows.forEach(row => {
-            messages.push({
-              id: row.id,
-              user: {
-                name: row.user_name,
-                display_name: row.user_display_name,
-                avatar_icon: row.user_avatar_icon,
-              },
-              date: formatDate(row.created_at),
-              content: row.content,
-            })
-          })
+          return pool.query(`
+            SELECT
+                m.id,
+                m.created_at,
+                m.content,
+                u.name as user_name,
+                u.display_name as user_display_name,
+                u.avatar_icon as user_avatar_icon
+            FROM
+                message as m
+                inner join user as u on u.id = m.user_id
+            WHERE
+                m.channel_id = ?
+            ORDER BY m.id DESC
+            LIMIT ?
+            OFFSET ?`, [channelId, N, (page - 1) * N])
+            .then(rows => {
+              const messages = []
 
-          messages.reverse()
-
-          // FIXME: ここでもchannel idからchannelを求めるクエリ投げてる
-          return getChannelListInfo(pool, channelId)
-            .then(({ channels, description }) => {
-              res.render('history', {
-                req, channels, channelId, messages, maxPage, page,
+              rows.forEach(row => {
+                messages.push({
+                  id: row.id,
+                  user: {
+                    name: row.user_name,
+                    display_name: row.user_display_name,
+                    avatar_icon: row.user_avatar_icon,
+                  },
+                  date: formatDate(row.created_at),
+                  content: row.content,
+                })
               })
-            })
-      })
+
+              messages.reverse()
+
+              // FIXME: ここでもchannel idからchannelを求めるクエリ投げてる
+              return getChannelListInfo(pool, channelId)
+                .then(({ channels, description }) => {
+                  res.render('history', {
+                    req, channels, channelId, messages, maxPage, page,
+                  })
+                })
+          })
+        })
     })
 }
 
