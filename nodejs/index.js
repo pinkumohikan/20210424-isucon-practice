@@ -434,7 +434,7 @@ function postProfile(req, res) {
         }
       }
       if (avatarName && avatarData) {
-        p = p.then(() => fs.writeFile(ICONS_FOLDER+"/"+avatarName, avatarData))
+        fs.writeFileSync(ICONS_FOLDER+"/"+avatarName, avatarData)
         p = p.then(() => pool.query('INSERT INTO image (name, data) VALUES (?, _binary ?)', [avatarName, avatarData]))
         p = p.then(() => pool.query('UPDATE user SET avatar_icon = ? WHERE id = ?', [avatarName, userId]))
       }
