@@ -9,6 +9,7 @@ stop-services:
 
 start-services:
 	sudo systemctl start mysql
+	sudo mysql -u root isubata -e "SET GLOBAL slow_query_log = ON;"
 	sudo systemctl start isubata.nodejs
 	sudo systemctl start nginx
 
