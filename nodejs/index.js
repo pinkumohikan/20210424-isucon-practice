@@ -299,20 +299,22 @@ function fetchUnread(req, res) {
   const results = []
 
   const messageChannelIds = pool.query('SELECT message_id, channel_id FROM haveread WHERE user_id = ? AND channel_id in (SELECT id FROM channel)', [userId])
-  return messageIds.then(([row]) => {
-    if (row) {
-      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ? AND ? < id', [row.channelId, row.message_id])
+  messageChannelIds.then(([row]) => {
+    let p = Promise.resolve()
+    p =  p.then(() => { if (row) {
+      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ? AND ? < id', [row.channel_id, row.message_id])
     } else {
-      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ?', [row.channelId])
-    }
+      return pool.query('SELECT COUNT(id) as cnt FROM message WHERE channel_id = ?', [row.channel_id])
+    }}) 
   })
   .then(([row3]) => {
     const r = {}
-    r.channel_id = channelId
+    r.channel_id = channel_id
     r.unread = row3.cnt
     results.push(r)
   })
-  .then(() => res.json(results))
+  
+  return p.then(() => res.json(results))
 }
 
 app.get('/history/:channelId', loginRequired, getHistory)
