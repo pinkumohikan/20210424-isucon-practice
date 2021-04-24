@@ -434,7 +434,7 @@ function postProfile(req, res) {
         }
       }
       if (avatarName && avatarData) {
-        fs.writeFile(ICONS_FOLDER+avatarName, avatarData);
+        fs.writeFile(ICONS_FOLDER+"/"+avatarName, avatarData);
         p = p.then(() => pool.query('INSERT INTO image (name, data) VALUES (?, _binary ?)', [avatarName, avatarData]))
         p = p.then(() => pool.query('UPDATE user SET avatar_icon = ? WHERE id = ?', [avatarName, userId]))
       }
@@ -480,7 +480,7 @@ pool.query("SELECT * FROM image")
     .then((images) => {
         images.forEach(image => {
             // attributes: id, name, data
-            fs.writeFile(ICONS_FOLDER+image.name, image.data, (err) => !!err && console.error("書き込めんかったわ :knife: error="+err));
+            fs.writeFile(ICONS_FOLDER+"/"+image.name, image.data, (err) => !!err && console.error("書き込めんかったわ :knife: error="+err));
         });
     });
 
